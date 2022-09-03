@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -36,9 +36,9 @@ function verifyJWT(req, res, next) {
 async function run() {
   try {
     await client.connect();
-    const serviceCollection = client.db('docotors_portal').collection('services');
+    const serviceCollection = client.db('doctors_portal').collection('services');
     const bookingCollection = client.db('doctors_portal').collection('bookings');
-    const userCollection = client.db('docotors_portal').collection('users');
+    const userCollection = client.db('doctors_portal').collection('users');
     const doctorCollection = client.db('doctors_portal').collection('doctors');
 
     const verifyAdmin = async (req, res, next) => {
@@ -147,6 +147,13 @@ async function run() {
       else {
         return res.status(403).send({ message: 'forbidden access' });
       }
+    });
+
+    app.get('/booking/:id', verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id)};
+      const booking = await bookingCollection.findOne(query);
+      res.send(booking);
     })
 
     app.post('/booking', async (req, res) => {
